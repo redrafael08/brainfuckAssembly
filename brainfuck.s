@@ -11,28 +11,42 @@ format_str2: .asciz "\n%c\n"
 brainfuck:
 	pushq %rbp
 	movq %rsp, %rbp
-	pushq	%rdi
-	subq	$8,%rsp
+
+	pushq	%rdi		# push instruction pointer -8
+	subq	$8,%rsp		# stack alignment
 
 	movq %rdi, %rsi
 	movq $format_str, %rdi
-	call printf
+	call printf		# print instruction
 	movq $0, %rax
+
+	
+
+	movq $16, %r10  # make memory pointer 16
+
+	movq	$2000,%rdi
+clearMemoryLoop:
+	subq	$8,%rsp  # move stackpointer down
+	movq	$0,(%rsp)
+	decq	%rdi
+	cmpq	$0,%rdi
+	jge		clearMemoryLoop	
+	
 
 
 instruction:
 
-	movq $0, %rax
-	movq -8(%rbp), %r9
+	movq $0, %rax		
+	movq -8(%rbp), %r9 # move instruction pointer to r9
 
-	movq	$format_str2,%rdi
+	movq	$format_str2,%rdi   
 
 	movq	$0, %r8
-	movb (%r9), %r8b
-	movq	%r8, %rsi
-	movq	$0, %r10
+	movb 	(%r9), %r8b # move instruction to r8
+	movq	%r8, %rsi  
+
 	
-	call printf
+	call printf   # print instruction
 
 	
 	/*
@@ -41,23 +55,37 @@ instruction:
 	cmpq	 $60,%r8
 	jmp	movPl
 	cmpq	 $43,%r8
+	*/
 	jmp	Incr
 	cmpq	 $45,%r8
+	/*
 	jmp	Decr
 	cmpq	 $46,%r8
+	*/
 	jmp	Outp
 	cmpq	 $44,%r8
+	
+	/*
 	jmp	Inp
 	cmpq	 $91,%r8
+	
 	jmp	JmpPast
 	cmpq	 $93,%r8
 	jmp	JmpBack
 	*/
+	
+	
 
 
 
-	incq	-8(%rbp)
-	jmp instruction
+	incq	-8(%rbp)  # increase instruction pointer
+
+	#cmpq	$0, %r8	# check if end of instruction
+	#jne instruction
+	jmp	instruction
+
+
+
 
 
 
@@ -69,22 +97,36 @@ instruction:
 
 
 movPr:
-	decq %rsp
+	decq %r10# move memory pointer to right
+	jmp	instruction
 
 
 movPl:
-	incq %rsp
+	incq %r10 # move memory pointer to left
+	jmp	instruction
+
+
+
 Incr:
-	incq (%rsp)
+	incb (%rbp,%r10,1)  # increase memory cell by 1
+	jmp	instruction
+
 Decr:
-	decq (%rsp)
+	decb (%rbp,%r10,1) # decrease memory cell by 1
+	jmp	instruction
 	
 Outp:
 
 	movq	$0, %rax
-	movq	$0,%rdi
+	movq	$format_str2,%rdi
+	movq	$0,%rsi
+	movb	(%rbp,%r10,1),%sil
 
 	call 	printf
+
+	call exit
+	jmp	instruction
+
 
 Inp:
 
@@ -93,12 +135,16 @@ Inp:
     movq     $format_str2 , %rdi  #first argument scanf
     movq     $0 , %rax  #no vector register used to scanf
     call    scanf # scan
+	jmp	instruction
+
 
 JmpPast:
 	addq $0,%rdi  # if (rsp) == 0 jmp ]
+	jmp	instruction
+
 
 JmpBack:  # jmp (rsp) != 0 jmp [
-
+	jmp	instruction
 
 
 
@@ -113,4 +159,13 @@ JmpBack:  # jmp (rsp) != 0 jmp [
 44,	Input a character and store it in the cell at the pointer scanf
 9Decr1[	Jump past the matching ] if the cell at the pointer is 0
 93]	Jump back to the matching [ if the cell at the pointer is nonzero
+
+
+
+
+[
+	code
+]
+
+
 */
