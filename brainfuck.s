@@ -5,6 +5,9 @@ format_str2: .asciz "\n%c\n"
 
 # Your brainfuck subroutine will receive one argument:
 # a zero termianted string containing the code to execute.
+
+#hoi
+
 brainfuck:
 	pushq %rbp
 	movq %rsp, %rbp
